@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Quest-Brett">
+    <title>Quest-Brett des Schicksals</title>
+
+    <!-- Inline Icon als Data-URI -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231a1a2e'/><circle cx='96' cy='96' r='75' fill='%23ffd700'/><text x='96' y='130' font-size='90' text-anchor='middle'>⚔️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231a1a2e'/><circle cx='96' cy='96' r='75' fill='%23ffd700'/><text x='96' y='130' font-size='90' text-anchor='middle'>⚔️</text></svg>">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'MedievalSharp', serif;
+            color: #f4e4c1;
+            padding: 10px;
+            min-height: 100vh;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* HEADER */
+        .header {
+            text-align: center;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 12px 0 10px;
+            z-index: 100;
+            border-radius: 0 0 10px 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ffd70044;
+        }
+
+        .header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.7em;
+            color: #ffd700;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8), 0 0 15px rgba(255,215,0,0.4);
+            margin-bottom: 8px;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(139, 69, 19, 0.5);
+            padding: 8px 6px;
+            border-radius: 10px;
+            border: 2px solid #ffd700;
+            margin: 0 4px;
+            gap: 4px;
+        }
+
+        .stat-item { text-align: center; flex: 1; min-width: 60px; }
+        .stat-label { font-size: 0.72em; color: #c9a961; }
+        .stat-value { font-size: 1.2em; color: #ffd700; font-weight: bold; }
+
+        /* XP BAR */
+        .xp-bar-bg {
+            margin: 8px 4px 0;
+            height: 10px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 5px;
+            border: 1px solid #ffd70066;
+            overflow: hidden;
+        }
+        .xp-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            border-radius: 5px;
+            transition: width 0.6s ease;
+        }
+        .xp-bar-label {
+            text-align: center;
+            font-size: 0.7em;
+            color: #c9a961;
+            margin-top: 2px;
+        }
+
+        /* QUEST SECTIONS */
+        .quest-section { margin-bottom: 15px; }
+
+        .section-header {
+            background: linear-gradient(90deg, #8b4513 0%, #a0522d 50%, #8b4513 100%);
+            padding: 11px 14px;
+            border: 3px solid #ffd700;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.08), transparent);
+            animation: shine 4s infinite;
+        }
+
+        .section-header h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.2em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+        .collapse-icon { transition: transform 0.3s ease; font-size: 0.8em; }
+        .section-header.collapsed .collapse-icon { transform: rotate(-90deg); }
+
+        .rank-badge {
+            background: #ffd700; color: #8b4513;
+            padding: 2px 9px; border-radius: 20px;
+            font-size: 0.58em; font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* QUEST LIST */
+        .quest-list {
+            background: rgba(26, 26, 46, 0.85);
+            border: 3px solid #8b4513;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 12px;
+            max-height: 3000px;
+            overflow: hidden;
+            transition: max-height 0.45s ease, padding 0.45s ease;
+        }
+        .quest-list.collapsed { max-height: 0; padding: 0 12px; }
+
+        /* QUEST ITEM */
+        .quest-item {
+            background: linear-gradient(135deg, rgba(139,69,19,0.28), rgba(101,67,33,0.28));
+            border: 2px solid #c9a961;
+            border-radius: 8px;
+            padding: 11px 11px 11px 11px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            transition: border-color 0.3s, background 0.3s, opacity 0.3s;
+        }
+
+        .quest-item.completed {
+            background: linear-gradient(135deg, rgba(34,139,34,0.3), rgba(0,100,0,0.3));
+            border-color: #90EE90;
+            opacity: 0.72;
+        }
+
+        .quest-item.completed .quest-title::before { content: '✓ '; color: #90EE90; }
+
+        .quest-item.debuff {
+            border-color: #8b0000;
+            background: linear-gradient(135deg, rgba(139,0,0,0.28), rgba(70,0,0,0.28));
+        }
+
+        .quest-title {
+            font-size: 1.05em;
+            color: #ffd700;
+            margin-bottom: 6px;
+            font-weight: bold;
+            padding-right: 72px;
+        }
+
+        .quest-reward {
+            font-size: 0.92em;
+            display: flex; align-items: center;
+            gap: 6px; flex-wrap: wrap;
+        }
+
+        .gold { color: #ffd700; font-weight: bold; }
+        .neg { color: #ff4444; font-weight: bold; }
+
+        .stat {
+            background: rgba(255,215,0,0.18);
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid #ffd700;
+            font-size: 0.82em;
+        }
+
+        /* DIFFICULTY BADGE */
+        .difficulty {
+            position: absolute; top: 7px; right: 7px;
+            background: #8b0000; color: #fff;
+            padding: 3px 7px; border-radius: 4px;
+            font-size: 0.67em; font-weight: bold;
+        }
+        .difficulty.easy { background: #228b22; }
+        .difficulty.medium { background: #ff8c00; }
+        .difficulty.hard { background: #8b0000; }
+
+        /* COMPLETE BUTTON */
+        .complete-btn {
+            position: absolute; bottom: 8px; right: 8px;
+            background: #228b22; color: white;
+            border: 2px solid #90EE90;
+            padding: 5px 11px; border-radius: 5px;
+            font-family: 'MedievalSharp', serif;
+            font-size: 0.78em; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            touch-action: manipulation;
+            z-index: 2;
+        }
+        .complete-btn:active { transform: scale(0.93); background: #1a7a1a; }
+        .complete-btn.undo { background: #8b4513; border-color: #c9a961; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(90deg, #8b4513, #a0522d, #8b4513);
+            border-top: 3px solid #ffd700;
+            display: flex; justify-content: space-around;
+            padding: 8px 0; z-index: 1000;
+        }
+
+        .nav-btn {
+            background: none; border: none; color: #ffd700;
+            font-family: 'MedievalSharp', serif;
+            font-size: 0.85em; padding: 8px 12px;
+            cursor: pointer; border-radius: 5px;
+            transition: background 0.2s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-btn:active { background: rgba(255,215,0,0.2); }
+
+        /* MODALS */
+        .modal {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.82);
+            z-index: 2000;
+            justify-content: center; align-items: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 3px solid #ffd700; border-radius: 15px;
+            padding: 22px; max-width: 460px; width: 100%;
+            max-height: 80vh; overflow-y: auto;
+        }
+
+        .modal-header {
+            font-family: 'Cinzel', serif;
+            font-size: 1.4em; color: #ffd700;
+            margin-bottom: 16px; text-align: center;
+        }
+
+        .modal-btn {
+            background: #228b22; color: white;
+            border: 2px solid #90EE90;
+            padding: 12px 18px; border-radius: 6px;
+            font-family: 'MedievalSharp', serif;
+            font-size: 1em; cursor: pointer;
+            width: 100%; margin-top: 12px;
+            touch-action: manipulation;
+            transition: background 0.15s, transform 0.1s;
+        }
+        .modal-btn:active { transform: scale(0.96); background: #1a7a1a; }
+        .modal-btn.cancel { background: #8b4513; border-color: #c9a961; margin-top: 18px; }
+        .modal-btn.danger { background: #8b0000; border-color: #ff4444; }
+
+        .modal-info { color: #90EE90; font-size: 0.88em; margin-bottom: 4px; text-align: center; }
+        .modal-sub { color: #c9a961; font-size: 0.82em; text-align: center; margin-bottom: 8px; }
+
+        /* ACHIEVEMENT POPUP */
+        .achievement-popup {
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #8b4513; padding: 12px 22px;
+            border-radius: 10px; border: 3px solid #ff8c00;
+            font-weight: bold; z-index: 3000;
+            animation: popIn 0.35s ease;
+            box-shadow: 0 5px 18px rgba(0,0,0,0.5);
+            max-width: 90vw; text-align: center;
+            font-size: 1em;
+        }
+
+        /* INSTALL BANNER */
+        .install-banner {
+            background: linear-gradient(135deg, rgba(139,69,19,0.6), rgba(101,67,33,0.6));
+            border: 2px solid #ffd700; border-radius: 10px;
+            padding: 12px 14px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer; user-select: none;
+            touch-action: manipulation;
+        }
+        .install-banner:active { opacity: 0.8; }
+        .install-banner .icon { font-size: 1.8em; }
+        .install-banner .text { flex: 1; }
+        .install-banner .text strong { color: #ffd700; display: block; margin-bottom: 2px; }
+        .install-banner .text span { color: #c9a961; font-size: 0.82em; }
+        .install-banner .arrow { color: #ffd700; font-size: 1.4em; }
+
+        /* ANIMATIONS */
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.85); }
+            60% { transform: translateX(-50%) translateY(4px) scale(1.04); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        @keyframes popOut {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-25px) scale(0.85); }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.35em; }
+            .stat-value { font-size: 1.05em; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- INSTALL BANNER (iOS hint – hidden by default, shown via JS) -->
+<div class="install-banner" id="installBanner" style="display:none;" onclick="document.getElementById('installBanner').style.display='none'">
+    <div class="icon">📲</div>
+    <div class="text">
+        <strong>Zum Home-Bildschirm hinzufügen!</strong>
+        <span>Tippe auf ↑ und wähle "Zum Home-Bildschirm"</span>
+    </div>
+    <div class="arrow">✕</div>
+</div>
+
+<div class="container">
+    <!-- HEADER + STATS -->
+    <div class="header">
+        <h1>⚔️ QUEST-BRETT ⚔️</h1>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-label">XP</div>
+                <div class="stat-value" id="totalXP">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Gold</div>
+                <div class="stat-value" id="totalGold">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">LP</div>
+                <div class="stat-value" id="lifePoints">100</div>
+            </div>
+        </div>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBar"></div></div>
+        <div class="xp-bar-label" id="xpBarLabel">0 / 1000 XP bis Level 2</div>
+    </div>
+
+    <!-- ===== HAUPTQUEST ===== -->
+    <div class="quest-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2><div class="left-title">👑 HAUPTQUEST <span class="rank-badge">LEGENDÄR</span></div><span class="collapse-icon">▼</span></h2>
+        </div>
+        <div class="quest-list">
+            <div class="quest-item" data-xp="500" data-gold="1" data-id="haupt1">
+                <div class="difficulty hard">MONATLICH</div>
+                <div class="quest-title">🏆 Der Pfad der fleißigen Seele</div>
+                <div class="quest-reward"><span class="gold">💰 500 XP + 1 Gold</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'haupt1')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="300" data-id="haupt2">
+                <div class="difficulty medium">WÖCHENTLICH</div>
+                <div class="quest-title">📚 Meisterung der verborgenen Künste</div>
+                <div class="quest-reward"><span class="gold">💰 300 XP</span><span class="stat">+1 Skillpunkt</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'haupt2')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="350" data-id="haupt3">
+                <div class="difficulty hard">BOSS QUEST</div>
+                <div class="quest-title">💎 Die Schatzsuche des Disziplinmeisters</div>
+                <div class="quest-reward"><span class="gold">💰 350 XP</span><span class="stat">🏅 Erfolg freigeschaltet!</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'haupt3')">Erledigt</button>
+            </div>
+            <div class="quest-item debuff" data-xp="-350" data-lp="-20" data-id="haupt4">
+                <div class="difficulty hard">⚠️ FEHLQUEST</div>
+                <div class="quest-title">💀 Unter 1000 XP fallen</div>
+                <div class="quest-reward"><span class="neg">⚠️ -350 XP | -20 LP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'haupt4')">Fehlgeschlagen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== NEBENQUEST ===== -->
+    <div class="quest-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2><div class="left-title">🗡️ NEBENQUEST <span class="rank-badge">WÖCHENTLICH</span></div><span class="collapse-icon">▼</span></h2>
+        </div>
+        <div class="quest-list">
+            <div class="quest-item" data-xp="100" data-id="neben1">
+                <div class="difficulty easy">SPORT</div>
+                <div class="quest-title">⚡ Kriegstraining im Morgengrauen</div>
+                <div class="quest-reward"><span class="gold">💰 100 XP</span><span class="stat">+1 Ausdauer</span><span class="stat">+1 Stärke</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'neben1')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="neben2">
+                <div class="difficulty easy">HAUSHALT</div>
+                <div class="quest-title">🧹 Reinigung des Chaosreichs</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Ordnung</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'neben2')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="neben3">
+                <div class="difficulty easy">HAUSHALT</div>
+                <div class="quest-title">🧼 Ritual der sauberen Hände (Saugen/Wischen)</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Ordnung</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'neben3')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="neben4">
+                <div class="difficulty easy">HAUSHALT</div>
+                <div class="quest-title">👕 Kampf gegen den Berg der Textilien</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Ordnung</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'neben4')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="neben5">
+                <div class="difficulty medium">DETOX</div>
+                <div class="quest-title">🧘 Die 6-Stunden-Meditation der Reinigung</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Willenskraft</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'neben5')">Erledigt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DAILYS ===== -->
+    <div class="quest-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2><div class="left-title">⭐ TÄGLICHE QUESTS <span class="rank-badge">ROUTINE</span></div><span class="collapse-icon">▼</span></h2>
+        </div>
+        <div class="quest-list">
+            <div class="quest-item" data-xp="10" data-id="daily1">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">💧 Die Quelle des Lebens (2 Liter Wasser)</div>
+                <div class="quest-reward"><span class="gold">💰 10 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily1')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="25" data-id="daily2">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">🏃 Die 30-Minuten-Pilgerschaft</div>
+                <div class="quest-reward"><span class="gold">💰 25 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily2')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="20" data-id="daily3">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">🍎 Das Festmahl der Gesundheit</div>
+                <div class="quest-reward"><span class="gold">💰 20 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily3')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="15" data-id="daily4">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">😴 7 Stunden im Reich der Träume</div>
+                <div class="quest-reward"><span class="gold">💰 15 XP</span><span class="stat">🛡️ Ausgeruht-Buff</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily4')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="10" data-id="daily5">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">🍳 Kulinarische Kreationen (Küche aufräumen)</div>
+                <div class="quest-reward"><span class="gold">💰 10 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily5')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="10" data-id="daily6">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">🗣️ Worte der Fremden lernen (Sprache üben)</div>
+                <div class="quest-reward"><span class="gold">💰 10 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily6')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="daily7">
+                <div class="difficulty medium">TÄGLICH</div>
+                <div class="quest-title">🎵 Die Melodie der Kreativität (30 Min Musik/Kunst)</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Geschick</span><span class="stat">+1 Kreativität</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily7')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="10" data-id="daily8">
+                <div class="difficulty easy">TÄGLICH</div>
+                <div class="quest-title">🛏️ Ritual des gemachten Lagers (Bett machen)</div>
+                <div class="quest-reward"><span class="gold">💰 10 XP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'daily8')">Erledigt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== OPTIONALE QUESTS ===== -->
+    <div class="quest-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2><div class="left-title">🌟 OPTIONALE QUESTS <span class="rank-badge">BONUS</span></div><span class="collapse-icon">▼</span></h2>
+        </div>
+        <div class="quest-list">
+            <div class="quest-item" data-xp="100" data-id="opt1">
+                <div class="difficulty medium">OPTIONAL</div>
+                <div class="quest-title">📖 Wissen der alten Schriften (Buch/Manga 1/4)</div>
+                <div class="quest-reward"><span class="gold">💰 100 XP</span><span class="stat">+1 Intelligenz</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt1')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="opt2">
+                <div class="difficulty medium">OPTIONAL</div>
+                <div class="quest-title">💪 Zusätzliches Kriegertraining</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Ausdauer</span><span class="stat">+1 Stärke</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt2')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="80" data-id="opt3">
+                <div class="difficulty medium">OPTIONAL</div>
+                <div class="quest-title">👥 Pflege der sozialen Bande</div>
+                <div class="quest-reward"><span class="gold">💰 80 XP</span><span class="stat">+1 Charisma</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt3')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="10" data-id="opt4">
+                <div class="difficulty easy">OPTIONAL</div>
+                <div class="quest-title">🍬 Versuchung widerstehen (keine Süßigkeiten)</div>
+                <div class="quest-reward"><span class="gold">💰 10 XP</span><span class="stat">+1 Willenskraft</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt4')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="100" data-id="opt5">
+                <div class="difficulty medium">MONATLICH</div>
+                <div class="quest-title">🎨 Miniaturen der Kreativität bemalen</div>
+                <div class="quest-reward"><span class="gold">💰 100 XP</span><span class="stat">+1 Geschick</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt5')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="100" data-id="opt6">
+                <div class="difficulty medium">WÖCHENTLICH</div>
+                <div class="quest-title">🤝 Das soziale Projekt des Wochenendes</div>
+                <div class="quest-reward"><span class="gold">💰 100 XP</span><span class="stat">+1 Charisma</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt6')">Erledigt</button>
+            </div>
+            <div class="quest-item" data-xp="50" data-id="opt7">
+                <div class="difficulty medium">MONATLICH</div>
+                <div class="quest-title">💎 Prüfung der Sparsamkeit (keine unnötigen Käufe)</div>
+                <div class="quest-reward"><span class="gold">💰 50 XP</span><span class="stat">+1 Willenskraft</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'opt7')">Erledigt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DEBUFFS ===== -->
+    <div class="quest-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2><div class="left-title">💀 DEBUFFS <span class="rank-badge" style="background:#ff4444;color:#fff;">ACHTUNG</span></div><span class="collapse-icon">▼</span></h2>
+        </div>
+        <div class="quest-list">
+            <div class="quest-item debuff" data-xp="-200" data-id="debuff1">
+                <div class="difficulty hard">ZEITFALLE</div>
+                <div class="quest-title">📱 Doomscrolling-Fluch (>1h/Tag)</div>
+                <div class="quest-reward"><span class="neg">💀 -200 XP | -1 Willenskraft</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'debuff1')">Verflucht</button>
+            </div>
+            <div class="quest-item debuff" data-xp="-50" data-lp="-10" data-id="debuff2">
+                <div class="difficulty medium">GESUNDHEIT</div>
+                <div class="quest-title">🍔 Vergiftung durch ungesunde Nahrung</div>
+                <div class="quest-reward"><span class="neg">💀 -50 XP | -10 LP</span></div>
+                <button class="complete-btn" onclick="completeQuest(event,'debuff2')">Vergiftet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+    <button class="nav-btn" onclick="showStats()">📊 Stats</button>
+    <button class="nav-btn" onclick="showResetMenu()">🔄 Reset</button>
+    <button class="nav-btn" onclick="resetAll()">⚠️ Alles</button>
+</div>
+
+<!-- ===== MODALS ===== -->
+<!-- Stats -->
+<div class="modal" id="statsModal">
+    <div class="modal-content">
+        <div class="modal-header">📊 Deine Statistiken</div>
+        <div id="statsContent" style="color:#f4e4c1;line-height:2;"></div>
+        <button class="modal-btn cancel" onclick="closeModal()">Schließen</button>
+    </div>
+</div>
+
+<!-- Reset Menu -->
+<div class="modal" id="resetModal">
+    <div class="modal-content">
+        <div class="modal-header">🔄 Quests Zurücksetzen</div>
+        <p class="modal-info">✨ XP / Gold / LP bleiben erhalten!</p>
+        <p class="modal-sub">Quests werden nur zurückgesetzt, damit du sie nochmal machen kannst.</p>
+        <button class="modal-btn" onclick="resetDaily()">🌅 Tägliche Quests</button>
+        <button class="modal-btn" onclick="resetWeekly()">📅 Nebenquests</button>
+        <button class="modal-btn" onclick="resetOptional()">🌟 Optionale Quests</button>
+        <button class="modal-btn cancel" onclick="closeModal()">Abbrechen</button>
+    </div>
+</div>
+
+<!-- ===== INLINE SERVICE WORKER + MANIFEST + LOGIC ===== -->
+<script>
+// ── 1) Inline Manifest & Service Worker registrieren ──────────
+(function(){
+    const manifest = {
+        name:"Quest-Brett des Schicksals",
+        short_name:"Quest-Brett",
+        description:"Dein episches Quest-System",
+        start_url:".",
+        display:"standalone",
+        background_color:"#1a1a2e",
+        theme_color:"#1a1a2e",
+        orientation:"portrait-primary",
+        icons:[
+            {src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231a1a2e'/><circle cx='96' cy='96' r='75' fill='%23ffd700'/><text x='96' y='130' font-size='90' text-anchor='middle'>⚔️</text></svg>",sizes:"192x192",type:"image/svg+xml",purpose:"any maskable"},
+            {src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%231a1a2e'/><circle cx='256' cy='256' r='200' fill='%23ffd700'/><text x='256' y='340' font-size='240' text-anchor='middle'>⚔️</text></svg>",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}
+        ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+    const link = document.createElement('link');
+    link.rel='manifest'; link.href=URL.createObjectURL(blob);
+    document.head.appendChild(link);
+
+    // Inline Service Worker
+    const swCode = `
+        const CACHE='qb-v2';
+        self.addEventListener('install',e=>{
+            e.waitUntil(caches.open(CACHE).then(c=>c.addAll([location.href])));
+            self.skipWaiting();
+        });
+        self.addEventListener('fetch',e=>{
+            e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{
+                if(!resp||resp.status!==200||resp.type!=='basic') return resp;
+                const clone=resp.clone();
+                caches.open(CACHE).then(c=>c.put(e.request,clone));
+                return resp;
+            })));
+        });
+        self.addEventListener('activate',e=>{
+            e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+            self.clients.claim();
+        });
+    `;
+    const swBlob = new Blob([swCode], {type:'application/javascript'});
+    navigator.serviceWorker && navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+})();
+
+// ── 2) iOS Install Hint ────────────────────────────────────────
+(function(){
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if(ios && !standalone){
+        const banner = document.getElementById('installBanner');
+        banner.style.display='flex';
+        setTimeout(()=>{ banner.style.display='none'; }, 12000);
+    }
+})();
+
+// ── 3) Game State ──────────────────────────────────────────────
+let gameState = {
+    totalXP:0, totalGold:0, lifePoints:100, level:1,
+    completedQuests:{},
+    stats:{ questsCompleted:0 }
+};
+
+function loadGameState(){
+    try {
+        const s = localStorage.getItem('qb_state');
+        if(s) { gameState = JSON.parse(s); updateAllUI(); }
+    } catch(e){}
+}
+
+function saveGameState(){
+    try { localStorage.setItem('qb_state', JSON.stringify(gameState)); } catch(e){}
+}
+
+// ── 4) UI Updates ──────────────────────────────────────────────
+function updateAllUI(){
+    document.getElementById('totalXP').textContent = gameState.totalXP;
+    document.getElementById('totalGold').textContent = gameState.totalGold;
+    document.getElementById('lifePoints').textContent = gameState.lifePoints;
+
+    // Level calc: every 1000 XP
+    const newLevel = Math.max(1, Math.floor(gameState.totalXP / 1000) + 1);
+    if(newLevel > gameState.level){
+        gameState.level = newLevel;
+        showAchievement('🎉 Level ' + newLevel + ' erreicht!');
+    }
+    gameState.level = newLevel;
+    document.getElementById('level').textContent = gameState.level;
+
+    // XP bar
+    const nextLevelXP = gameState.level * 1000;
+    const prevLevelXP = (gameState.level - 1) * 1000;
+    const pct = Math.min(100, ((gameState.totalXP - prevLevelXP) / 1000) * 100);
+    document.getElementById('xpBar').style.width = pct + '%';
+    document.getElementById('xpBarLabel').textContent = gameState.totalXP + ' / ' + nextLevelXP + ' XP bis Level ' + (gameState.level+1);
+
+    // Restore quest visual states
+    document.querySelectorAll('.quest-item').forEach(el => {
+        const id = el.dataset.id;
+        if(gameState.completedQuests[id]){
+            el.classList.add('completed');
+            const btn = el.querySelector('.complete-btn');
+            if(btn){ btn.textContent='Rückgängig'; btn.classList.add('undo'); }
+        } else {
+            el.classList.remove('completed');
+            const btn = el.querySelector('.complete-btn');
+            if(btn){
+                btn.classList.remove('undo');
+                btn.textContent = el.classList.contains('debuff')
+                    ? (id==='debuff1' ? 'Verflucht' : 'Vergiftet')
+                    : (id === 'haupt4' ? 'Fehlgeschlagen' : 'Erledigt');
+            }
+        }
+    });
+}
+
+// ── 5) Complete / Undo Quest ───────────────────────────────────
+function completeQuest(event, questId){
+    event.stopPropagation();
+    const el = document.querySelector('[data-id="'+questId+'"]');
+    if(!el) return;
+
+    const xp  = parseInt(el.dataset.xp)  || 0;
+    const gold= parseInt(el.dataset.gold) || 0;
+    const lp  = parseInt(el.dataset.lp)   || 0;
+    const btn = el.querySelector('.complete-btn');
+
+    if(gameState.completedQuests[questId]){
+        // UNDO
+        gameState.totalXP  -= xp;
+        gameState.totalGold -= gold;
+        gameState.lifePoints -= lp;
+        gameState.stats.questsCompleted--;
+        delete gameState.completedQuests[questId];
+
+        el.classList.remove('completed');
+        if(btn){ btn.classList.remove('undo');
+            btn.textContent = el.classList.contains('debuff')
+                ? (questId==='debuff1'?'Verflucht':'Vergiftet')
+                : (questId==='haupt4'?'Fehlgeschlagen':'Erledigt');
+        }
+    } else {
+        // COMPLETE
+        gameState.totalXP  += xp;
+        gameState.totalGold += gold;
+        gameState.lifePoints += lp;
+        gameState.stats.questsCompleted++;
+        gameState.completedQuests[questId] = true;
+
+        el.classList.add('completed');
+        if(btn){ btn.textContent='Rückgängig'; btn.classList.add('undo'); }
+
+        if(xp > 0) showAchievement('✨ +'+xp+' XP erhalten!');
+        else if(xp < 0) showAchievement('💀 '+xp+' XP verloren!');
+    }
+
+    updateAllUI();
+    saveGameState();
+}
+
+// ── 6) Achievement Popup ───────────────────────────────────────
+function showAchievement(text){
+    const old = document.querySelector('.achievement-popup');
+    if(old) old.remove();
+
+    const pop = document.createElement('div');
+    pop.className = 'achievement-popup';
+    pop.textContent = text;
+    document.body.appendChild(pop);
+
+    setTimeout(()=>{
+        pop.style.animation = 'popOut 0.3s ease forwards';
+        setTimeout(()=>pop.remove(), 350);
+    }, 2200);
+}
+
+// ── 7) Toggle Sections ─────────────────────────────────────────
+function toggleSection(header){
+    header.classList.toggle('collapsed');
+    header.nextElementSibling.classList.toggle('collapsed');
+}
+
+// ── 8) Modals ──────────────────────────────────────────────────
+function showStats(){
+    document.getElementById('statsContent').innerHTML =
+        '<p style="margin-bottom:6px"><strong style="color:#ffd700">Total XP:</strong> '+gameState.totalXP+'</p>'+
+        '<p style="margin-bottom:6px"><strong style="color:#ffd700">Gold:</strong> '+gameState.totalGold+'</p>'+
+        '<p style="margin-bottom:6px"><strong style="color:#ffd700">Level:</strong> '+gameState.level+'</p>'+
+        '<p style="margin-bottom:6px"><strong style="color:#ffd700">Lebenspunkte:</strong> '+gameState.lifePoints+'</p>'+
+        '<p style="margin-bottom:6px"><strong style="color:#ffd700">Quests erledigt:</strong> '+gameState.stats.questsCompleted+'</p>';
+    document.getElementById('statsModal').classList.add('active');
+}
+
+function showResetMenu(){
+    document.getElementById('resetModal').classList.add('active');
+}
+
+function closeModal(){
+    document.querySelectorAll('.modal').forEach(m=>m.classList.remove('active'));
+}
+
+// ── 9) Reset Functions (XP BLEIBT!) ────────────────────────────
+function resetDaily(){ doReset('daily','🌅 Tägliche Quests zurückgesetzt!'); }
+function resetWeekly(){ doReset('neben','📅 Nebenquests zurückgesetzt!'); }
+function resetOptional(){ doReset('opt','🌟 Optionale Quests zurückgesetzt!'); }
+
+function doReset(prefix, msg){
+    let count = 0;
+    document.querySelectorAll('[data-id^="'+prefix+'"]').forEach(el=>{
+        const id = el.dataset.id;
+        if(gameState.completedQuests[id]){
+            delete gameState.completedQuests[id];
+            count++;
+        }
+    });
+    closeModal();
+    updateAllUI();
+    saveGameState();
+    showAchievement(count > 0 ? msg+' ('+count+')' : 'Keine Quests zum Zurücksetzen!');
+}
+
+// ── 10) Reset ALL ──────────────────────────────────────────────
+function resetAll(){
+    if(!confirm('⚠️ Alles zurücksetzen? Das löscht deinen gesamten Fortschritt!')) return;
+    gameState = { totalXP:0, totalGold:0, lifePoints:100, level:1, completedQuests:{}, stats:{questsCompleted:0} };
+    updateAllUI();
+    saveGameState();
+    showAchievement('🔄 Komplett zurückgesetzt!');
+}
+
+// ── 11) Modal close on backdrop ────────────────────────────────
+document.querySelectorAll('.modal').forEach(m=>{
+    m.addEventListener('click', e=>{ if(e.target===m) closeModal(); });
+});
+
+// ── 12) Init ───────────────────────────────────────────────────
+window.addEventListener('load', loadGameState);
+</script>
+</body>
+</html>
